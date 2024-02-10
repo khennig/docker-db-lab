@@ -6,10 +6,11 @@ POSTGRES_DB=mydatabase
 POSTGRES_USER=myuser
 POSTGRES_PASSWORD=mypass
 POSTGRES_URL=jdbc:postgresql://localhost:5432/$POSTGRES_DB
+CV_RUNTIME=docker
 
 wait_for_postgresql() {
   TRIES=0
-  while ! docker exec docker-db-lab pg_isready; do
+  while ! $CV_RUNTIME exec docker-db-lab pg_isready; do
     TRIES=$((TRIES + 1))
     if [ "$TRIES" -ge "10" ]; then
       echo "Stop waiting for PostgreSQL to accept connections"
@@ -19,9 +20,9 @@ wait_for_postgresql() {
   done
 }
 
-docker build -t de.erik.lab/docker-db-lab .
-docker rm -f docker-db-lab || true
-docker run -d -p 5432:5432  \
+$CV_RUNTIME build -t de.erik.lab/docker-db-lab .
+$CV_RUNTIME rm -f docker-db-lab || true
+$CV_RUNTIME run -d -p 5432:5432  \
   --env POSTGRES_DB=$POSTGRES_DB \
   --env POSTGRES_USER=$POSTGRES_USER \
   --env POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
@@ -36,4 +37,4 @@ mvn clean compile flyway:migrate \
   -Dflyway.user=$POSTGRES_USER \
   -Dflyway.password=$POSTGRES_PASSWORD
 
-docker commit docker-db-lab de.erik.lab/docker-db-lab
+$CV_RUNTIME commit docker-db-lab de.erik.lab/docker-db-lab
